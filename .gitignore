@@ -26,3 +26,5 @@ Temporary Items
 .apdisk
 
 .env
+~$*.xlsx
+fetch_data.ipynb
