@@ -75,7 +75,8 @@ def byte_offset_to_char_position(text, byte_offset):
 def censor_text_with_google_nlp(text, censor_flags, stats):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "files/dataengineering-project1-ddca4f2d3131.json"
     # Use Google NLP to identify and censor additional sensitive information
-
+    if len(text) > 5000:
+        text = text[:5000]
     client = language_v1.LanguageServiceClient()
     document = language_v1.Document(content=text, type_=language_v1.Document.Type.PLAIN_TEXT)
     response = client.analyze_entities(document=document, encoding_type='UTF8')

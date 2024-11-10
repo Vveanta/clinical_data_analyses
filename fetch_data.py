@@ -50,11 +50,13 @@ def scrape_subreddit(subreddit_name, search_terms):
     print(f"Scraping subreddit: {subreddit.display_name}")
     count = 0
     for term in search_terms:
-        for post in subreddit.search(term, limit=100):  # Adjust limit as needed
+        for post in subreddit.search(term, limit=10):  # Adjust limit as needed
             # Check if the post is relevant
             if is_relevant(post.title) or is_relevant(post.selftext):
-                censored_title, _ = censor_text(post.title, nlp, matcher, censor_flags)
-                censored_text, _ = censor_text(post.selftext, nlp, matcher, censor_flags)
+                title_text = post.title[:5000]
+                body_text = post.selftext[:5000]
+                censored_title, _ = censor_text(title_text, nlp, matcher, censor_flags)
+                censored_text, _ = censor_text(body_text, nlp, matcher, censor_flags)
                 data.append({
                     'Type': 'Post',
                     'Post_id': post.id,
@@ -70,7 +72,8 @@ def scrape_subreddit(subreddit_name, search_terms):
                 if post.num_comments > 0:
                     post.comments.replace_more(limit=5)
                     for comment in post.comments.list():
-                        censored_comment_text, _ = censor_text(comment.body, nlp, matcher, censor_flags)
+                        comment_text = comment.body[:5000]
+                        censored_comment_text, _ = censor_text(comment_text, nlp, matcher, censor_flags)
                         # if is_relevant(comment.body): # Check if the comment is relevant
                         data.append({
                             'Type': 'Comment',
