@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 import pandas as pd
 from datetime import datetime, timezone
 import time
+from censoring import censor_text, create_matcher
+import spacy
+
 # Initialize Reddit instance
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +17,16 @@ reddit = praw.Reddit(
     client_secret=os.getenv("CLIENT_SECRET"),
     user_agent=os.getenv("USER_AGENT")
 )
+
+# Initialize NLP and matcher
+nlp = spacy.load("en_core_web_md")
+censor_flags = {
+    'names': True,
+    'dates': True,
+    'phones': True,
+    'address': True
+}
+matcher = create_matcher(nlp, censor_flags)
 
 ## Define lists to store data
 data = []
@@ -40,13 +53,15 @@ def scrape_subreddit(subreddit_name, search_terms):
         for post in subreddit.search(term, limit=100):  # Adjust limit as needed
             # Check if the post is relevant
             if is_relevant(post.title) or is_relevant(post.selftext):
+                censored_title, _ = censor_text(post.title, nlp, matcher, censor_flags)
+                censored_text, _ = censor_text(post.selftext, nlp, matcher, censor_flags)
                 data.append({
                     'Type': 'Post',
                     'Post_id': post.id,
-                    'Title': post.title,
+                    'Title': censored_title,
                     'Author': post.author.name if post.author else 'Unknown',
                     'Timestamp': datetime.fromtimestamp(post.created_utc, tz=timezone.utc).replace(tzinfo=None),
-                    'Text': post.selftext,
+                    'Text': censored_text,
                     'Total_comments': post.num_comments,
                     'Post_URL': post.url
                 })
@@ -55,19 +70,20 @@ def scrape_subreddit(subreddit_name, search_terms):
                 if post.num_comments > 0:
                     post.comments.replace_more(limit=5)
                     for comment in post.comments.list():
+                        censored_comment_text, _ = censor_text(comment.body, nlp, matcher, censor_flags)
                         # if is_relevant(comment.body): # Check if the comment is relevant
                         data.append({
                             'Type': 'Comment',
                             'Post_id': post.id,
-                            'Title': post.title,
+                            'Title': censored_title,
                             'Author': comment.author.name if comment.author else 'Unknown',
                             'Timestamp': pd.to_datetime(comment.created_utc, unit='s'),
-                            'Text': comment.body,
+                            'Text': censored_comment_text,
                             'Total_comments': 0,  # Comments don’t have this attribute
                             'Post_URL': None  # Comments don’t have this attribute
                         })
                         count += 1
-            time.sleep(1)
+            # time.sleep(1)
     print(f"Total relevant entries for '{subreddit.display_name}': {count}")
 
 # Scraping using Approach 1

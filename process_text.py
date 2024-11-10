@@ -68,8 +68,8 @@ results = []
 
 # Process data entries
 for index, row in data.iterrows():
-    if index < 346:
-        continue
+    # if index < 346:
+    #     continue
 
     type_of_text = row["Type"]
     title = row["Title"]
@@ -98,9 +98,9 @@ for index, row in data.iterrows():
     }
     results.append(result_dict)
 
-    # Stop after processing 20 entries
-    if len(results) >= 15:
-        break
+    # # Stop after processing 20 entries
+    # if len(results) >= 15:
+    #     break
 
 # Convert classification results to DataFrame
 classified_df = pd.DataFrame(results)

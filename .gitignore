@@ -30,3 +30,4 @@ Temporary Items
 fetch_data.ipynb
 files
 personalized_messages_combined.xlsx
+__pycache__/
